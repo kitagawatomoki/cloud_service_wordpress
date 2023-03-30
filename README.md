@@ -43,9 +43,47 @@
 ## EC2サーバの設定
 
 #### 1. EC2サーバにssh
-#### 2 . docker, docker-compose, nginx, cerbotのインストール
+#### 2. docker, docker-compose, nginx, cerbotのインストール
   - https://kacfg.com/aws-ec2-docker/
   - https://qiita.com/e-onm/items/0814b6c4db395e331df1
+#### 3. サイトのhttps化のためのSSL証明書の取得（Let's encrypt）
+  - 以下のディレクトリ構造になるようにroot権限で作成
+
+![unnamed (3)](https://user-images.githubusercontent.com/76994536/228910806-93bada7e-ac76-484d-bda6-c34b5cc5b89c.png)
+
+  - Index.htmlには好きに記載する
+  - nginxの起動
+  ```
+  sudo service nginx start
+  ```
+  - SSL証明書の取得（Let's encrypt）
+  ```
+  sudo certbot certonly -d {取得ドメイン名}
+  ```
+  - nginxの停止（dockerでnginxを起動するため）
+  ```
+  sudo service nginx stop
+  ```
+  
+#### 4. ssl自動更新
+
+  - sslを更新するためのbash（rennew_ssl.sh）を用意する
+  ```
+  #!/bin/bash
+
+  cd /cloud_service_production/
+
+  certbot renew
+
+  docker-compose down
+
+  docker-compose up -d
+  ```
+  - crontabを用いて月１で自動更新するbashを起動するようにする
+  ```
+  0 0 1 * * /cloud_service_productionrenew_ssl.sh 2>&1 >>/cloud_service_production/renew_ssl.log
+  ```
+
 
 
 
